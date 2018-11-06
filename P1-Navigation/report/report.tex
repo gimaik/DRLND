@@ -1,0 +1,148 @@
+\documentclass[12pt,twoside]{article}
+
+\newcommand{\reporttitle}{Project 1: Navigation}
+\newcommand{\reportauthor}{Thomas Teh}
+\newcommand{\reporttype}{Project Report}
+\newcommand{\cid}{0124 3008}
+
+% include files that load packages and define macros
+\input{includes} % various packages needed for maths etc.
+\input{notation} % short-hand notation and macros
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+% front page
+\input{titlepage}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%% Main document
+
+\section{Learning Algorithms}
+The deep Q-learning algorithm (DQN) mimics the tabular Q-learning algorithm in order to solve a Markov Decision Process. We know that from dynamic programming and tabular reinforcement learning methods, the optimal action-value function obeys the Bellman Optimality equation below:
+\begin{align*}
+Q^*(s,a) = \mathbb{E}_{s^\prime \sim \varepsilon}\left[\left. r + \gamma \max_{a^\prime} Q(s^\prime, a^\prime)\right\vert s,a \right].
+\end{align*}
+
+However, in DQN, instead of having a table of action values $Q(s,a)$ for each state, the action-values $Q(s,a)$ are estimated using a function approximator, which is a neural network architecture. The parameters of the Q-network are learned by minimizing the loss function below:
+\begin{align*}
+	L_i(\theta_i) = \mathbb{E}_{s,a \sim \rho(\cdot)}\left[(y_i - Q(s,a;\theta_i))^2\right]
+\end{align*}
+where
+\begin{align*}
+	y_i & = \mathbb{E}_{s^\prime \sim \varepsilon}\left[\left.r +\gamma \max_{a^\prime}Q(s^\prime, a^\prime; \theta_{i-1})\right\vert s,a\right].
+\end{align*}
+
+The optimization of the parameters is usually achieved via gradient descent algorithms (e.g. ADAM, Adagrad, SGD etc) and the gradient of the loss function with respect to the Q-network parameters is given below:
+
+\begin{align*}
+	\nabla_{\theta_i} L_i(\theta_i) = \mathbb{E}_{s,a\sim\rho(\cdot); s^\prime \varepsilon}\left[\left(r + \gamma \max_{a^\prime} Q(s^\prime, a^\prime; \theta_{i-1}) - Q(s,a;\theta_i)\right)\nabla_{\theta_i} Q(s,a;\theta_i)\right]
+\end{align*}	
+
+It is important to note that in DQN, the parameters are not updated online. Instead, the state-action transitions based on the current action-values are stored in a memory reservoir (experience replay). Samples of the transitions are then sampled in training the agent and updating the respective parameters. The pseudo-code for DQN are given in Algorithm 1.\\
+
+
+
+\begin{algorithm}[H]
+
+\SetAlgoLined
+\textbf{Initialization:}\\
+Initialize replay memory $\mathcal{D}$ to capacity $N$.\\
+Initialize action-value function $\mathcal{Q}$ with random weights.\
+
+\For{episode = 1:M}{
+	Initialize sequence $s_1 \lbrace x_1 \rbrace$ and preprocessed sequenced $\phi_1=\phi(s_1)$.\\
+	\For{t=1:T}{
+		With probability $\epsilon$ select random action $a_t$ \\otherwise select $a_t=\max_a \mathcal{Q}^*(\phi(s_t), a; \theta)$\\
+		Execute action $a_t$ in emulator and observe reward $r_t$ and image $x_{t+1}$\\
+		Set $s_{t+1} = s_t$, $a_t$, $x_{t+1}$ and preprocess $\phi_{t+1}=\phi(s_{t+1})$\\
+		Store transition $(\phi_t, a_t ,r_t, \phi_{t+1})$ in $mathcal{D}$\\
+		Sample random minibatch of transitions $(\phi_j, a_i, r_j, \phi_{j+1})$ from $\mathcal{D}$\\
+		Set $y_j = \begin{cases} r_j 	& \text{for terminal } \phi_{j+1}\\ r_j + \gamma \max_a^\prime Q(\phi_{j+t}, a^\prime; \theta) & \text{for non-terminal } \phi_{j+1}\end{cases}$\\
+		Perform a gradient descent step on $(y_j - Q(\phi_j, a_j; \theta))^2$ 
+	}	
+}
+ \caption{Deep Q-Learning Networks (DQN) with Experience Replay}
+\end{algorithm}
+
+\subsection{Q-Network: Dueling Q-Network}
+
+For the navigation project, the Q-network architecture is shown in Figure \ref{fig:architecture}. The input layer is followed by 3 hidden layers with 128 units of neurons each. Instead of estimating the action-values directly, the last hidden layer is then mapped to the advantage module and the value function module respectively. \\
+
+We then aggregate the two modules to obtain the estimates of the action-value functions. Mathematically, the two modules are aggregated in the following manner:
+\begin{align*}
+	Q(s,a; \theta,\alpha, \beta) = V(s;\theta, \beta) + \left(A(s,a; \theta, \alpha) - \max_{a^\prime}A(s,a^\prime; \theta, \alpha) \right)
+\end{align*}
+where $V(s;\theta, \beta)$ is the value function and a scalar value, and $A(s,a; \theta, \alpha)$ is the advantage function and a vector.
+
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width = 1\hsize]{./figures/Architecture.png} 
+		\caption{Architecture of the Q-network.} % caption of the figure
+		\label{fig:architecture} % a label. When we refer to this label from the text, the figure %number is included automatically
+	\end{center}
+\end{figure}
+
+The hyperparameters used in training the Q-network are listed below:
+\begin{center}
+	\begin{tabular}{|c|c|}
+	\hline
+		Hyperparameter						& Value\\\hline
+		Learning rate, $\alpha$				& 0.0001 \\
+		Discount factor, $\gamma$		& 0.9900 \\
+		Buffer size								& 500,000\\
+		Soft update weights, $tau$		& 0.0010\\
+		Update frequency						& 4 steps\\
+		$\varepsilon_{initial}$				& 1.0000\\
+		$\varepsilon_{final}$					& 0.0050\\
+		$\varepsilon$- decay				& 0.9950\\\hline
+	\end{tabular}
+\end{center}
+	
+The average rewards during the training process is shown in Figure \ref{fig:rewards}. It can be observed that the agent can achieve a mean score of 13 after around 600 episodes. It took around 1800 episodes to achieve a mean score of 17.00.
+	
+	
+\begin{figure}[H]
+	\begin{center}
+		\includegraphics[width = 1\hsize]{./figures/Rewards.png} 
+		\caption{Average reward vs number of episodes} % caption of the figure
+		\label{fig:rewards} % a label. When we refer to this label from the text, the figure %number is included automatically
+	\end{center}
+\end{figure}
+
+
+\section{Ideas for Future Work}
+Improvements or redesign of the solution can be done in two aspects: algorithms and problem formulation. In terms of algorithms, we can potentially implement the double-Q learning, prioritized experience replay, or to depart from the estimation of action-values and opt for policy gradient methods instead. As for problem formulation, we can potentially solve the problem by learning directly from the pixels, in which we need to implement computer vision techniques to disentangle the information and patterns from each frame during game play. 	
+
+
+\subsection{Choice of Algorithms}
+\begin{enumerate}
+	\item Double-Q Learning: Double Q-learning allows the algorithm to avoid overestimation of the Q-values as well as provide stability in the training process. In order to implement the Double Q-learning, we just need to make some small changes to the original DQN algorithhm. The DQN algorithm is based on the Q-learning algorithm which has the following update equation:
+	\begin{align*}
+		Q(s,a; \theta_i) \leftarrow Q(s,a; \theta_{i-1})  + \alpha\left[r + \gamma \max_{a^\prime} Q(s^\prime, a^\prime, \theta_{i-1})  - Q(s,a; \theta_i)\right].
+	\end{align*}
+	In Double-Q Learning, we can change the update equation to the following:
+	\begin{align*}
+		Q(s,a; \theta_i) \leftarrow Q(s,a; \theta_{i-1})  + \alpha\left[r + \gamma Q\left(s^\prime, \text{arg} \max_{a^\prime} Q(s^\prime, a^\prime; \theta_i); \theta_{i-1}\right)  - Q(s,a; \theta_i)\right].
+	\end{align*}
+	
+	\item Prioritized Experience Replay: Under the current implementation, the experience replay instances are sampled uniformly. However, it is possible to quickly prioritize the different instances based on the TD error. Prioritize experience replay will shorten the training process by allowing the algorithm to focus on the instances with larger TD errors.
+
+	\item Policy Gradient Methods: While the specific policy gradient methods have yet to be introduced, it is possible to us to solve the navigation project using policy gradient methods. Instead of having a function approximator to estimate the action-value functions, the function approximator will directly map to the appropriate function for each given state.
+	
+\end{enumerate}
+
+\subsection{Learning from Pixels}
+Lastly, it is possible to learn directly from the pixels of the game play. Several frames of the game play can be stacked and preprocessed in order to retain the temporal information and to reduce the input size respectively. Then preprocessed input can then be passed through a convolutional neural network to extract meaningful feature representations and to estimate the action-value function. \\
+
+Lastly, it is important to note that the different ideas for future work are not mutually exhaustive. In fact, many of the ideas can be implemented and fine-tuned to achieve state-of-the art performance in the navigation game play.
+
+
+
+
+\end{document}
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 
