@@ -1,5 +1,5 @@
 # DRLND-Continuous-Control
-![reacher-gif](https://github.com/gimaik/DRLND-Continuous-Control/blob/master/reacher.gif)
+![reacher-gif](https://github.com/gimaik/DRLND/blob/master/P2-Continuous-Control/reacher.gif)
 
 
 # The solution for Unity Reacher Environment
