@@ -1,0 +1,7 @@
+\BOOKMARK [1][]{section.1}{1 Multi-Agent DDPG}{}% 1
+\BOOKMARK [1][]{section.2}{2 The MADDPG Architecture}{}% 2
+\BOOKMARK [2][]{subsection.4}{2.1 The Actor Network}{section.2}% 3
+\BOOKMARK [2][]{subsection.6}{2.2 The Critic Network}{section.2}% 4
+\BOOKMARK [1][]{section.8}{3 Hyperparameters}{}% 5
+\BOOKMARK [1][]{section.9}{4 Results}{}% 6
+\BOOKMARK [1][]{section.11}{5 Ideas for Future Work}{}% 7
