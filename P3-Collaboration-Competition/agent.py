@@ -104,6 +104,7 @@ class MultiAgent:
         critic_loss = F.mse_loss(input=Q_local, target=Q_target.detach())
         agent.critic_local.zero_grad()
         critic_loss.backward()
+        torch.nn.utils.clip_grad_norm_(agent.critic_local.parameters(), 2)
         agent.critic_optimizer.step()
 
         # Update the actor policy
@@ -114,6 +115,7 @@ class MultiAgent:
 
         actor_loss = -agent.critic_local(full_states_e, actions.view(-1, self.action_dim)).mean()
         agent.actor_local.zero_grad()
+        torch.nn.utils.clip_grad_norm_(agent.actor_local.parameters(), 2)
         actor_loss.backward()
         agent.actor_optimizer.step()
 
