@@ -1,5 +1,5 @@
 # DRLND Collaboration & Competition
-![tennis-gif](https://github.com/gimaik/DRLND/P3-Collaboration-Competition/tennis.gif)
+![tennis-gif](https://github.com/gimaik/DRLND/blob/master/P3-Collaboration-Competition/tennis.gif)
 
       
 # Solution for the Unity Tennis Environment
