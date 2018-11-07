@@ -1,5 +1,5 @@
 # DRLND-Navigation
-![Banana-gif](https://github.com/gimaik/DRLND-Navigation/blob/master/banana.gif)
+![Banana-gif](https://github.com/gimaik/DRLND/P1-Navigation/blob/master/banana.gif)
 
 
 # The solution for the Unity Banana environment
